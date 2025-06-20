@@ -25,7 +25,7 @@ COPY . /app/
 EXPOSE 8000
 
 # Recolecta archivos estáticos (importante para producción)
-RUN python manage.py collectstatic --noinput
+#RUN python manage.py collectstatic --noinput
 
 # Define el comando para iniciar Gunicorn (servidor de producción WSGI)
 # Usaremos un script de entrada para esperar a la base de datos
