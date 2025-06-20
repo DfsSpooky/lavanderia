@@ -17,9 +17,23 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copia solo entrypoint.sh primero y dale permisos
-COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
+# CREA EL ARCHIVO entrypoint.sh DIRECTAMENTE DENTRO DEL CONTENEDOR
+# Esto evita cualquier problema de copia o saltos de línea desde el host
+RUN echo '#!/bin/sh' > /app/entrypoint.sh && \
+    echo 'echo "Waiting for postgres..."' >> /app/entrypoint.sh && \
+    echo 'while ! nc -z db 5432; do' >> /app/entrypoint.sh && \
+    echo '  sleep 0.1' >> /app/entrypoint.sh && \
+    echo 'done' >> /app/entrypoint.sh && \
+    echo 'echo "PostgreSQL started"' >> /app/entrypoint.sh && \
+    echo 'python manage.py migrate' >> /app/entrypoint.sh && \
+    echo 'echo "Collecting static files..."' >> /app/entrypoint.sh && \
+    echo 'python manage.py collectstatic --noinput' >> /app/entrypoint.sh && \
+    echo 'gunicorn laundry_app.wsgi:application --bind 0.0.0.0:8000' >> /app/entrypoint.sh && \
+    chmod +x /app/entrypoint.sh # Asegura permisos de ejecución
+
+# Opcional: Diagnóstico para verificar el archivo creado
+RUN ls -l /app/entrypoint.sh
+RUN cat /app/entrypoint.sh # Para ver el contenido dentro de la imagen
 
 # Copia el resto del código de la aplicación
 COPY . /app/
@@ -29,5 +43,4 @@ EXPOSE 8000
 
 # Define el comando para iniciar Gunicorn (servidor de producción WSGI)
 # Usaremos un script de entrada para esperar a la base de datos
-# CAMBIO: Usaremos la forma "shell" para ENTRYPOINT para ver si ayuda
 ENTRYPOINT ["/app/entrypoint.sh"]
