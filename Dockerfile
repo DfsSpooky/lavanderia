@@ -30,4 +30,4 @@ EXPOSE 8000
 # Define el comando para iniciar Gunicorn (servidor de producción WSGI)
 # Usaremos un script de entrada para esperar a la base de datos
 # CAMBIO: Usaremos la forma "shell" para ENTRYPOINT para ver si ayuda
-ENTRYPOINT /app/entrypoint.sh # <--- ¡CAMBIA ESTA LÍNEA!
+ENTRYPOINT ["/app/entrypoint.sh"]
