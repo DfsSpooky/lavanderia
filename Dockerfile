@@ -9,7 +9,6 @@ RUN apt-get update && apt-get install -y \
     postgresql-client \
     netcat-traditional \
     gcc \
-    # Dependencias para Pillow (si manejas imágenes)
     libjpeg-dev \
     zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
@@ -21,11 +20,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copia el resto del código de la aplicación
 COPY . /app/
 
+# ASEGÚRATE DE QUE entrypoint.sh TIENE PERMISOS DE EJECUCIÓN
+RUN chmod +x /app/entrypoint.sh # <--- ¡Añade esta línea!
+
 # Expone el puerto que usará Gunicorn
 EXPOSE 8000
-
-# Recolecta archivos estáticos (importante para producción)
-#RUN python manage.py collectstatic --noinput
 
 # Define el comando para iniciar Gunicorn (servidor de producción WSGI)
 # Usaremos un script de entrada para esperar a la base de datos
