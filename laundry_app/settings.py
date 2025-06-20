@@ -1,21 +1,40 @@
 import os
 from pathlib import Path
+import dj_database_url
 
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
-DEBUG = False # DEBE SER FALSE EN PRODUCCIÓN
 
-# ACEPTA TU IP DEL VPS Y/O TU DOMINIO
+# Quick-start development settings - unsuitable for production
+# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
+
+# IMPORTANTE: Manten esta clave SECRETA y usa una variable de entorno en producción
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'your_default_secret_key_for_dev_if_not_set')
+
+# En producción, DEBUG DEBE SER FALSE
+DEBUG = False
+
+# DOMINIOS E IPs permitidos en producción
+# Se obtiene de la variable de entorno DJANGO_ALLOWED_HOSTS
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',')
 
+
+# Application definition
+
 INSTALLED_APPS = [
-    # ... tus otras apps
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    # Tus aplicaciones
     'core',
-    'django_select2',
+    # Aplicaciones de terceros
+    'django_select2', # Para los widgets mejorados
 ]
 
-# ... (otros middlewares)
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -31,8 +50,8 @@ ROOT_URLCONF = 'laundry_app.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')], # Asegúrate de que esto apunta a tu carpeta de templates principal
-        'APP_DIRS': True, # Esto es importante para que Django busque templates dentro de cada app
+        'DIRS': [os.path.join(BASE_DIR, 'templates')], # Si tienes una carpeta 'templates' global
+        'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -46,13 +65,24 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'laundry_app.wsgi.application'
 
-# Configuración de la base de datos para Docker
-import dj_database_url
-DATABASE_URL = os.environ.get('DATABASE_URL')
+
+# Database
+# Configuración de la base de datos PostgreSQL usando dj_database_url
+# Obtiene la URL de la base de datos de la variable de entorno DATABASE_URL
+# O construye una a partir de otras variables de entorno de POSTGRES
+DATABASE_URL = os.environ.get('DATABASE_URL',
+                              f"postgres://{os.environ.get('POSTGRES_USER')}:{os.environ.get('POSTGRES_PASSWORD')}@localhost:5432/{os.environ.get('POSTGRES_DB')}")
+
 DATABASES = {
-    'default': dj_database_url.config(default=DATABASE_URL, conn_max_age=600)
+    'default': dj_database_url.config(
+        default=DATABASE_URL,
+        conn_max_age=600 # Opcional: tiempo de vida de la conexión
+    )
 }
 
+
+# Password validation
+# https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -69,24 +99,37 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-LANGUAGE_CODE = 'es-es'
 
-TIME_ZONE = 'America/Lima'
+# Internationalization
+# https://docs.djangoproject.com/en/4.2/topics/i18n/
+
+LANGUAGE_CODE = 'es-es' # Cambiado a español de España
+
+TIME_ZONE = 'America/Lima' # Ajustado a tu zona horaria local
 
 USE_I18N = True
 
 USE_TZ = True
 
+
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/4.2/howto/static-files/
+
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles' # Asegúrate de que este directorio existe en tu contenedor
+STATIC_ROOT = BASE_DIR / 'static_cdn' # Ruta donde Nginx servirá los archivos estáticos
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media' # Asegúrate de que este directorio existe en tu contenedor
+MEDIA_ROOT = BASE_DIR / 'media_cdn' # Ruta donde Nginx servirá los archivos de medios (subidas de usuario)
+
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_REDIRECT_URL = 'dashboard'
-LOGOUT_REDIRECT_URL = 'home'
+# Configuración de redireccionamiento de autenticación
+LOGIN_REDIRECT_URL = 'dashboard' # Redirige al dashboard después de iniciar sesión
+LOGOUT_REDIRECT_URL = 'home' # Redirige a la página de inicio después de cerrar sesión
 
 # Configuración para django-select2
 CACHES = {
@@ -100,7 +143,7 @@ CACHES = {
 }
 SELECT2_CACHE_BACKEND = 'select2'
 
-# Configuración para SSL (si planeas usar HTTPS con Nginx)
+# Opcional: Configuración para SSL (HTTPS) - Descomentar cuando configures Certbot con Nginx
 # SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # SECURE_SSL_REDIRECT = True
 # SESSION_COOKIE_SECURE = True
