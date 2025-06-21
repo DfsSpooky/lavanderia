@@ -1,0 +1,25 @@
+# Framework principal
+Django==4.2.11
+
+# Servidor de aplicación para producción (Faltaba)
+gunicorn
+
+# Conector para la base de datos PostgreSQL (Faltaban)
+psycopg2-binary
+dj-database-url
+
+# Librerías de terceros usadas en tu proyecto
+django-select2==8.4.1
+pillow==10.3.0
+qrcode==7.4.2
+reportlab==4.4.1
+
+# Dependencias adicionales (generalmente instaladas automáticamente)
+asgiref==3.8.1
+chardet==5.2.0
+colorama==0.4.6
+django-appconf==1.1.0
+pypng==0.20220715.0
+sqlparse==0.5.3
+typing_extensions==4.14.0
+tzdata==2025.2
