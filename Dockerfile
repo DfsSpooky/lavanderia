@@ -1,28 +1,28 @@
 # Usa una imagen base oficial de Python
-FROM python:3.10-slim
+FROM python:3.9-slim
 
-# Establece variables de entorno
+# Establece variables de entorno para Python
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-# Establece el directorio de trabajo dentro del contenedor
+# Establece el directorio de trabajo
 WORKDIR /app
 
-# Instala dependencias del sistema operativo
-# 'postgresql-client' es necesario para que psycopg2 se compile correctamente
-RUN apt-get update && apt-get install -y gcc postgresql-client
+# --- ¡CAMBIO IMPORTANTE AQUÍ! ---
+# Instala las dependencias del sistema operativo ANTES de instalar las de Python.
+# gcc y libpq-dev son necesarios para compilar psycopg2 y otras librerías.
+RUN apt-get update && apt-get install -y \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copia el archivo de requerimientos y los instala
-# Usamos un paso separado para aprovechar el cache de Docker
+# Copia el archivo de requerimientos y los instala.
+# Ahora este paso debería funcionar sin problemas.
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-# Copia el resto del código de la aplicación al directorio de trabajo
+# Copia el resto del código
 COPY . .
 
-# Expone el puerto 8000 para que Gunicorn pueda servir la aplicación
+# Expone el puerto donde correrá Gunicorn
 EXPOSE 8000
-
-# Comando para ejecutar la aplicación
-# Inicia Gunicorn como servidor WSGI
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "laundry_app.wsgi:application"]
