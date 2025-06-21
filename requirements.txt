@@ -9,7 +9,7 @@ psycopg2-binary
 dj-database-url
 
 # Librerías de terceros usadas en tu proyecto
-django-select2==8.4.1
+django-select2==8.2.4
 pillow==10.3.0
 qrcode==7.4.2
 reportlab==4.4.1
