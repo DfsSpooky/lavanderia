@@ -1,11 +1,24 @@
+# settings.py - Modificado para Producción con Docker y PostgreSQL
+
 import os
 from pathlib import Path
+import dj_database_url # Importa la librería para leer la URL de la BD
 
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# --- Configuración de Seguridad ---
+# Lee la clave secreta desde el archivo .env
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
-DEBUG = False # Siempre False en producción
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',')
+
+# DEBUG debe ser False en un entorno de producción
+DEBUG = os.environ.get('DEBUG', '0') == '1' # Lee el valor de DEBUG desde .env (0 por defecto)
+
+# Lee los hosts permitidos desde el archivo .env
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+
+
+# Application definition
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -15,7 +28,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core',
-    'django_select2',  # Añadido para Select2
+    'django_select2',
 ]
 
 MIDDLEWARE = [
@@ -48,55 +61,49 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'laundry_app.wsgi.application'
 
+
+# --- Base de Datos (CAMBIO IMPORTANTE) ---
+# Ahora Django leerá la variable DATABASE_URL del archivo .env
+# para conectarse al contenedor de PostgreSQL.
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(conn_max_age=600)
 }
 
+
+# Password validation
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    { 'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator', },
+    { 'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', },
+    { 'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator', },
+    { 'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator', },
 ]
 
+
+# Internationalization
 LANGUAGE_CODE = 'es-es'
-
-TIME_ZONE = 'UTC'
-
+TIME_ZONE = 'America/Lima' # Ajustado a tu zona horaria
 USE_I18N = True
-
 USE_TZ = True
 
-STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles' # ¡Línea obligatoria!
+
+# --- Archivos Estáticos y de Medios ---
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'static_cdn' # Directorio para collectstatic
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = BASE_DIR / 'media_cdn' # Directorio para subidas de usuarios
 
+
+# Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# --- Redirecciones de Autenticación ---
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'home'
 
-# Configuración para django-select2
+# --- Configuración para django-select2 ---
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-    },
-    'select2': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'select2',
-    }
+    'default': { 'BACKEND': 'django.core.cache.backends.locmem.LocMemCache', },
+    'select2': { 'BACKEND': 'django.core.cache.backends.locmem.LocMemCache', 'LOCATION': 'select2', }
 }
 SELECT2_CACHE_BACKEND = 'select2'
