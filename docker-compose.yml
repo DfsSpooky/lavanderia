@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # Nuestro servicio de la aplicación Django
+  web:
+    build: .
+    # Comando para iniciar el servidor de producción Gunicorn
+    command: gunicorn laundry_app.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - .:/app
+      - static_volume:/app/static_cdn
+      - media_volume:/app/media_cdn
+    expose:
+      - 8000
+    # Carga las variables de nuestro archivo .env
+    env_file:
+      - .env
+    # Indica que este servicio depende de la base de datos
+    depends_on:
+      - db
+
+  # Nuestro servicio de Base de Datos PostgreSQL
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    # Carga las variables de BD desde el archivo .env para crear el usuario/db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+  # Un servidor web Nginx que actúa como proxy inverso
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - static_volume:/app/static_cdn
+      - media_volume:/app/media_cdn
+    depends_on:
+      - web
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:
